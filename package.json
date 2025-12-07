@@ -1,0 +1,41 @@
+{
+  "name": "leetcode-fetch",
+  "version": "1.0.0",
+  "description": "CLI tool to download LeetCode problems with solutions",
+  "main": "bin/leetcode-fetch.js",
+  "bin": {
+    "leetcode-fetch": "./bin/leetcode-fetch.js"
+  },
+  "scripts": {
+    "login": "node src/auth.js login",
+    "download": "node src/download.js",
+    "status": "node src/auth.js status",
+    "logout": "node src/auth.js logout"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "fs-extra": "^10.0.0"
+  },
+  "keywords": [
+    "leetcode",
+    "download",
+    "cli",
+    "leetcode-downloader",
+    "leetcode-problems",
+    "coding-interview",
+    "algorithm"
+  ],
+  "author": "Houston Zhang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Djanghao/leetcode-fetch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Djanghao/leetcode-fetch/issues"
+  },
+  "homepage": "https://github.com/Djanghao/leetcode-fetch#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+downloads/
+.download-progress.json
+error.log
+.git/
+.gitignore
+.DS_Store
+node_modules/
+*.log
+.vscode/
+.idea/
+*.swp
+*.swo
+.env
+.claude/
+docs/
