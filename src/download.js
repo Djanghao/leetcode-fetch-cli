@@ -350,7 +350,7 @@ async function getCodeTemplate(problemSlug, language) {
 }
 
 
-async function getDiscussSolution(problemId, problemSlug, language, problemPath, imageIndex = 0) {
+async function getDiscussSolution(problemId, problemSlug, language, problemPath) {
     if (!problemSlug) return { status: 'no_solution' };
 
     const cookies = getSessionCookies();
@@ -423,8 +423,9 @@ async function getDiscussSolution(problemId, problemSlug, language, problemPath,
                     .replace(/\\"/g, '"');
                 const solutionUrl = `https://leetcode.com/problems/${problemSlug}/solutions/${solution.id}/`;
                 const markdown = `# ${solution.title}\n\n**Author:** ${solution.post.author.username}\n**Votes:** ${solution.post.voteCount}\n**Link:** [${solutionUrl}](${solutionUrl})\n\n---\n\n${content}`;
-                const result = await downloadImageFromMarkdown(markdown, problemPath, '../images', imageIndex);
-                return { status: 'success', markdown: result.markdown, nextIndex: result.nextIndex };
+                const communityImageDir = path.join(problemPath, 'solutions', 'community', language, 'images');
+                const result = await downloadImageFromMarkdown(markdown, communityImageDir, './images');
+                return { status: 'success', markdown: result.markdown };
             } else {
                 return { status: 'no_solution' };
             }
@@ -435,11 +436,11 @@ async function getDiscussSolution(problemId, problemSlug, language, problemPath,
     }
 }
 
-async function downloadImageFromMarkdown(markdown, problemPath, relativeImagePath = '../images', startIndex = 0) {
+async function downloadImageFromMarkdown(markdown, imageDir, relativeImagePath = './images') {
     const imgRegex = /!\[.*?\]\((https?:\/\/[^\)]+)\)/g;
     let match;
     const imageMap = new Map();
-    let imageIndex = startIndex;
+    let imageIndex = 0;
     let hasImages = false;
 
     while ((match = imgRegex.exec(markdown)) !== null) {
@@ -447,15 +448,15 @@ async function downloadImageFromMarkdown(markdown, problemPath, relativeImagePat
 
         try {
             if (!hasImages) {
-                await fs.ensureDir(path.join(problemPath, 'images'));
+                await fs.ensureDir(imageDir);
                 hasImages = true;
             }
 
             const urlParts = imgUrl.split('/');
             const urlFileName = urlParts[urlParts.length - 1];
             const ext = urlFileName.includes('.') ? urlFileName.substring(urlFileName.lastIndexOf('.')) : '.png';
-            const imageName = `solution-image${imageIndex}${ext}`;
-            const imagePath = path.join(problemPath, 'images', imageName);
+            const imageName = `${imageIndex}${ext}`;
+            const imagePath = path.join(imageDir, imageName);
 
             await retryAsync(async () => {
                 const response = await axios.get(imgUrl, { responseType: 'arraybuffer', timeout: 10000 });
@@ -477,10 +478,10 @@ async function downloadImageFromMarkdown(markdown, problemPath, relativeImagePat
         );
     });
 
-    return { markdown: processedMarkdown, nextIndex: imageIndex };
+    return { markdown: processedMarkdown };
 }
 
-async function getOfficialSolution(problemSlug, problemPath, imageIndex = 0) {
+async function getOfficialSolution(problemSlug, problemPath) {
     if (!problemSlug) return null;
 
     const cookies = getSessionCookies();
@@ -534,8 +535,9 @@ async function getOfficialSolution(problemSlug, problemPath, imageIndex = 0) {
             const solutionUrl = `https://leetcode.com/problems/${problemSlug}/solution/`;
             const header = `# Official Solution\n\n**Link:** [${solutionUrl}](${solutionUrl})\n\n---\n\n`;
             const fullContent = header + content;
-            const result = await downloadImageFromMarkdown(fullContent, problemPath, '../images', imageIndex);
-            return { markdown: result.markdown, nextIndex: result.nextIndex };
+            const officialImageDir = path.join(problemPath, 'solutions', 'official', 'images');
+            const result = await downloadImageFromMarkdown(fullContent, officialImageDir, './images');
+            return { markdown: result.markdown };
         }
         return null;
     } catch (error) {
@@ -679,20 +681,19 @@ async function downloadProblem(problem, outputFolder, CONFIG) {
 
     const problemSlug = problem.slug;
 
-    let solutionImageIndex = 0;
-
     if (CONFIG.fetchOfficialSolution && problemSlug) {
         downloadStatus.officialSolution.total = 1;
-        const officialSolutionResult = await retryAsync(() => getOfficialSolution(problemSlug, problemPath, solutionImageIndex));
+        const officialSolutionResult = await retryAsync(() => getOfficialSolution(problemSlug, problemPath));
         if (officialSolutionResult) {
+            const officialDir = path.join(problemPath, 'solutions', 'official');
+            await fs.ensureDir(officialDir);
             await fs.writeFile(
-                path.join(problemPath, 'solutions', 'official-solution.md'),
+                path.join(officialDir, 'solution.md'),
                 officialSolutionResult.markdown,
                 'utf8'
             );
             downloadStatus.officialSolution.success = true;
             downloadStatus.officialSolution.count = 1;
-            solutionImageIndex = officialSolutionResult.nextIndex;
         } else {
             downloadStatus.officialSolution.total = 0;
         }
@@ -719,16 +720,17 @@ async function downloadProblem(problem, outputFolder, CONFIG) {
             }
 
             if (CONFIG.fetchSolutions && problemSlug) {
-                const solutionResult = await retryAsync(() => getDiscussSolution(problem.id, problemSlug, lang.name, problemPath, solutionImageIndex));
+                const solutionResult = await retryAsync(() => getDiscussSolution(problem.id, problemSlug, lang.name, problemPath));
                 if (solutionResult.status === 'success') {
+                    const communityLangDir = path.join(problemPath, 'solutions', 'community', lang.name);
+                    await fs.ensureDir(communityLangDir);
                     await fs.writeFile(
-                        path.join(problemPath, 'solutions', `solution.${lang.ext}.md`),
+                        path.join(communityLangDir, 'solution.md'),
                         solutionResult.markdown,
                         'utf8'
                     );
                     downloadStatus.communitySolutions.count++;
                     downloadStatus.communitySolutions.languages.push(lang.name);
-                    solutionImageIndex = solutionResult.nextIndex;
                 } else if (solutionResult.status === 'no_solution') {
                     downloadStatus.communitySolutions.total--;
                 }
@@ -750,6 +752,7 @@ async function processHtmlBody(html, problemPath) {
     const imageMap = new Map();
     let imageIndex = 0;
     let hasImages = false;
+    const descriptionImageDir = path.join(problemPath, 'description', 'images');
 
     while ((match = imgRegex.exec(html)) !== null) {
         const imgUrl = match[1];
@@ -761,22 +764,22 @@ async function processHtmlBody(html, problemPath) {
 
         try {
             if (!hasImages) {
-                await fs.ensureDir(path.join(problemPath, 'images'));
+                await fs.ensureDir(descriptionImageDir);
                 hasImages = true;
             }
 
             const urlParts = fullUrl.split('/');
             const urlFileName = urlParts[urlParts.length - 1];
             const ext = urlFileName.includes('.') ? urlFileName.substring(urlFileName.lastIndexOf('.')) : '.png';
-            const imageName = `image${imageIndex}${ext}`;
-            const imagePath = path.join(problemPath, 'images', imageName);
+            const imageName = `${imageIndex}${ext}`;
+            const imagePath = path.join(descriptionImageDir, imageName);
 
             await retryAsync(async () => {
                 const response = await axios.get(fullUrl, { responseType: 'arraybuffer', timeout: 10000 });
                 await fs.writeFile(imagePath, response.data);
             });
 
-            imageMap.set(imgUrl, `../images/${imageName}`);
+            imageMap.set(imgUrl, `./images/${imageName}`);
             imageIndex++;
         } catch (error) {
             imageMap.set(imgUrl, fullUrl);
