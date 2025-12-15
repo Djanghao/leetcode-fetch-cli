@@ -1,6 +1,6 @@
 {
-  "name": "leetcode-fetch",
-  "version": "1.0.0",
+  "name": "leetcode-fetch-cli",
+  "version": "1.1.0",
   "description": "CLI tool to download LeetCode problems with solutions",
   "main": "bin/leetcode-fetch.js",
   "bin": {
@@ -9,6 +9,7 @@
   "scripts": {
     "login": "node src/auth.js login",
     "download": "node src/download.js",
+    "export": "node bin/leetcode-fetch.js export",
     "status": "node src/auth.js status",
     "logout": "node src/auth.js logout"
   },
@@ -29,12 +30,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Djanghao/leetcode-fetch.git"
+    "url": "https://github.com/Djanghao/leetcode-fetch-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/Djanghao/leetcode-fetch/issues"
+    "url": "https://github.com/Djanghao/leetcode-fetch-cli/issues"
   },
-  "homepage": "https://github.com/Djanghao/leetcode-fetch#readme",
+  "homepage": "https://github.com/Djanghao/leetcode-fetch-cli#readme",
   "engines": {
     "node": ">=14.0.0"
   }

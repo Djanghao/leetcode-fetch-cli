@@ -1,4 +1,4 @@
-# leetcode-fetch
+# leetcode-fetch-cli
 
 CLI tool to batch download LeetCode problems with solutions using leetcode's GraphQL endpoint. Languages are automatically detected for each problem.
 
@@ -11,25 +11,28 @@ CLI tool to batch download LeetCode problems with solutions using leetcode's Gra
 - Download official solutions
 - Automatic image downloading
 
+
 ## Installation
 
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g leetcode-fetch
+npm install -g leetcode-fetch-cli
 ```
 
-### Using npx (No Installation)
+After installation, the `leetcode-fetch` command will be available globally.
+
+### Using npx (No Installation Required)
 
 ```bash
-npx leetcode-fetch <command>
+npx leetcode-fetch-cli <command>
 ```
 
 ### Local Development
 
 ```bash
-git clone https://github.com/Djanghao/leetcode-fetch.git
-cd leetcode-fetch
+git clone https://github.com/Djanghao/leetcode-fetch-cli.git
+cd leetcode-fetch-cli
 npm install
 npm link
 ```
@@ -94,7 +97,41 @@ leetcode-fetch download 1 -f md --no-templates
 leetcode-fetch status
 ```
 
-### 4. Logout
+### 4. Export Problems
+
+Export downloaded problems with filtering options.
+
+#### Export with Specific Language
+
+```bash
+leetcode-fetch export -o ./my-problems -l python3
+```
+
+#### Export Multiple Languages
+
+```bash
+leetcode-fetch export -o ./export -l python3,cpp,javascript
+```
+
+#### Export with HTML Format
+
+```bash
+leetcode-fetch export -o ./export -l python3 -f html
+```
+
+#### Export with Official Solutions
+
+```bash
+leetcode-fetch export -o ./my-problems -l python3,cpp -f md --official
+```
+
+#### Export All Languages (Default)
+
+```bash
+leetcode-fetch export -o ./export
+```
+
+### 5. Logout
 
 ```bash
 leetcode-fetch logout
@@ -131,25 +168,33 @@ Downloads only problem descriptions and code templates, ideal for practice.
 ```
 downloads/
 ├── .download-progress.json    # Resume progress tracking
-├── error.log                  # Error log (only if errors occurred)
 ├── array/                     # Organized by problem tags
 │   ├── 0001_Easy_two-sum/
 │   │   ├── description/
 │   │   │   ├── problem.html
 │   │   │   ├── problem.md
-│   │   │   └── problem.raw.txt
+│   │   │   ├── problem.raw.txt
+│   │   │   └── images/        # Description images
+│   │   │       ├── 0.jpg
+│   │   │       └── 1.jpg
 │   │   ├── templates/         # All available languages for this problem
 │   │   │   ├── solution.py
 │   │   │   ├── solution.js
 │   │   │   ├── solution.cpp
 │   │   │   └── ...
-│   │   ├── solutions/
-│   │   │   ├── official-solution.md
-│   │   │   ├── solution.py.md
-│   │   │   ├── solution.js.md
-│   │   │   └── ... (top voted solution per language)
-│   │   └── images/
-│   │       └── ...
+│   │   └── solutions/
+│   │       ├── official/
+│   │       │   ├── solution.md
+│   │       │   └── images/    # Official solution images
+│   │       │       └── 0.png
+│   │       └── community/     # Top voted solution per language
+│   │           ├── python3/
+│   │           │   ├── solution.md
+│   │           │   └── images/
+│   │           │       └── 0.jpeg
+│   │           ├── javascript/
+│   │           │   └── solution.md
+│   │           └── ...
 └── ...
 ├── database/                  # Database problems
 │   ├── 1280_Easy_students-and-examinations/
@@ -176,13 +221,20 @@ If errors occur, they're logged to `downloads/error.log`. Progress is saved to `
 
 ## Options Reference
 
+### Commands
+
 ```
 COMMANDS
   login             Authenticate with LeetCode
   logout            Clear authentication session
   status            Check authentication status
   download [id]     Download problems (optionally specify problem ID)
+  export            Export downloaded problems with filtering
+```
 
+### Download Options
+
+```
 DOWNLOAD OPTIONS
   [id]              Download specific problem by ID (optional)
   -f, --formats     Comma-separated formats: html,md,raw (default: all)
@@ -193,9 +245,25 @@ DOWNLOAD OPTIONS
   -h, --help        Show help message
 ```
 
+### Export Options
+
+```
+EXPORT OPTIONS
+  -o, --output <path>       Destination folder (required)
+  -l, --languages <langs>   Languages to export (comma-separated)
+                            Example: python3,cpp,javascript
+                            Default: all available languages
+  -f, --format <format>     Description format: html, md, or raw
+                            Default: md
+  --official               Include official solutions
+  -h, --help               Show help message
+```
+
 **Note**: Languages are automatically detected from each problem. Algorithm problems usually have 19 languages, database problems usually have 5 languages (SQL dialects + Pandas), and shell problems have Bash.
 
 ## Examples
+
+### Download Examples
 
 ```bash
 # Quick start
@@ -216,7 +284,30 @@ leetcode-fetch download -c 10
 
 # Download specific problem with custom options
 leetcode-fetch download 1 -f md --no-templates
+```
 
+### Export Examples
+
+```bash
+# Export Python problems with markdown format
+leetcode-fetch export -o ./my-problems -l python3
+
+# Export multiple languages with HTML
+leetcode-fetch export -o ./export -l python3,cpp,javascript -f html
+
+# Export with official solutions
+leetcode-fetch export -o ./export -l python3,cpp -f md --official
+
+# Export all languages (default)
+leetcode-fetch export -o ./all-problems
+
+# Export single language for practice
+leetcode-fetch export -o ./python-only -l python3 -f md
+```
+
+### Other Examples
+
+```bash
 # Check authentication
 leetcode-fetch status
 
@@ -239,8 +330,12 @@ MIT
 
 ## Repository
 
-https://github.com/Djanghao/leetcode-fetch
+https://github.com/Djanghao/leetcode-fetch-cli
 
 ## Issues
 
-https://github.com/Djanghao/leetcode-fetch/issues
+https://github.com/Djanghao/leetcode-fetch-cli/issues
+
+## NPM Package
+
+https://www.npmjs.com/package/leetcode-fetch-cli

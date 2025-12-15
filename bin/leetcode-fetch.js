@@ -55,6 +55,13 @@ const COMMANDS = {
                 process.exit(1);
             }
         }
+    },
+    export: {
+        description: 'Export downloaded problems',
+        handler: (args) => {
+            const exportModule = require('../src/export');
+            return exportModule.main(0, args);
+        }
     }
 };
 
@@ -106,6 +113,7 @@ function showHelp() {
   logout            Clear authentication session
   status            Check authentication status
   download [id]     Download problems (optionally specify problem ID)
+  export            Export downloaded problems with filtering
 
 \x1b[1mDOWNLOAD OPTIONS\x1b[0m
   [id]              Download specific problem by ID (optional)
