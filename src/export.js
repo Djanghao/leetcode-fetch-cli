@@ -41,6 +41,7 @@ const LANGUAGE_EXT_MAP = {
 function parseExportArgs(startIndex = 2, customArgs = null) {
     const args = customArgs || process.argv.slice(startIndex);
     const config = {
+        sourceDir: null,
         output: null,
         languages: null,
         format: 'md',
@@ -57,6 +58,8 @@ LeetCode Problems Exporter
 Usage: leetcode-fetch export [options]
 
 Options:
+  --source-dir, -s <path>   Source data directory (default: data/downloads)
+                            Example: -s data/leetcode-problems-251216
   --output, -o <path>       Destination folder (required)
   --languages, -l <langs>   Languages to export (comma-separated)
                             Example: python3,cpp,javascript
@@ -67,11 +70,14 @@ Options:
   --help, -h               Show this help message
 
 Examples:
-  npm run export -- -o ./my-problems -l python3,cpp -f md --official
-  npm run export -- --output ./export --languages javascript --format html
-  npm run export -- -o ./export -l python3
+  leetcode-fetch export -o ./my-problems -l python3,cpp -f md --official
+  leetcode-fetch export --output ./export --languages javascript --format html
+  leetcode-fetch export -o ./export -l python3
+  leetcode-fetch export -s data/my-dataset -o ./export
             `);
             process.exit(0);
+        } else if (arg === '--source-dir' || arg === '-s') {
+            config.sourceDir = args[++i];
         } else if (arg === '--output' || arg === '-o') {
             config.output = args[++i];
         } else if (arg === '--languages' || arg === '-l') {
@@ -92,9 +98,10 @@ async function validateExportConfig(config) {
         throw new Error('Output folder is required. Use -o or --output to specify destination.');
     }
 
-    const downloadsPath = path.join(workDir, 'downloads');
-    if (!await fs.pathExists(downloadsPath)) {
-        throw new Error('Downloads folder not found. Please run "npm run download" first.');
+    const sourceDir = config.sourceDir || 'data/downloads';
+    const sourcePath = path.join(workDir, sourceDir);
+    if (!await fs.pathExists(sourcePath)) {
+        throw new Error(`Source directory not found: ${sourceDir}. Please check the path or run download first.`);
     }
 
     const validFormats = ['html', 'md', 'raw'];
@@ -122,8 +129,8 @@ async function validateExportConfig(config) {
     }
 }
 
-async function scanDownloads() {
-    const downloadsPath = path.join(workDir, 'downloads');
+async function scanDownloads(sourceDir = 'data/downloads') {
+    const downloadsPath = path.join(workDir, sourceDir);
     const categories = await fs.readdir(downloadsPath);
     const problems = [];
 
@@ -321,15 +328,18 @@ async function main(startIndex = 2, customArgs = null) {
         process.exit(1);
     }
 
+    const sourceDir = config.sourceDir || 'data/downloads';
+
     console.log('\n\x1b[1mExport Configuration\x1b[0m');
+    console.log(`\x1b[2m  Source:\x1b[0m ${path.resolve(sourceDir)}`);
     console.log(`\x1b[2m  Output:\x1b[0m ${path.resolve(config.output)}`);
     console.log(`\x1b[2m  Languages:\x1b[0m ${config.languages ? config.languages.join(', ') : 'all'}`);
     console.log(`\x1b[2m  Format:\x1b[0m ${config.format}`);
     console.log(`\x1b[2m  Official solutions:\x1b[0m ${config.includeOfficial ? '\x1b[32mYes\x1b[0m' : '\x1b[2mNo\x1b[0m'}`);
     console.log('');
 
-    console.log('Scanning downloads folder...');
-    const problems = await scanDownloads();
+    console.log('Scanning source directory...');
+    const problems = await scanDownloads(sourceDir);
 
     if (problems.length === 0) {
         console.log('\n\x1b[33m⚠\x1b[0m  No problems found in downloads folder\n');

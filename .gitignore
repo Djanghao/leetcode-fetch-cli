@@ -1,3 +1,7 @@
 node_modules/
 downloads/
+data/
+tmp/
 .DS_Store
+*.zip
+*.tar.gz

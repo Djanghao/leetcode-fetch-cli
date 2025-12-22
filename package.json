@@ -1,7 +1,7 @@
 {
   "name": "leetcode-fetch-cli",
-  "version": "1.1.0",
-  "description": "CLI tool to download LeetCode problems with solutions",
+  "version": "1.2.0",
+  "description": "CLI tool to download LeetCode problems with solutions, pack and sync via Google Drive",
   "main": "bin/leetcode-fetch.js",
   "bin": {
     "leetcode-fetch": "./bin/leetcode-fetch.js"
@@ -10,6 +10,8 @@
     "login": "node src/auth.js login",
     "download": "node src/download.js",
     "export": "node bin/leetcode-fetch.js export",
+    "pack": "node bin/leetcode-fetch.js pack",
+    "sync": "node bin/leetcode-fetch.js sync",
     "status": "node src/auth.js status",
     "logout": "node src/auth.js logout"
   },
@@ -24,7 +26,12 @@
     "leetcode-downloader",
     "leetcode-problems",
     "coding-interview",
-    "algorithm"
+    "algorithm",
+    "backup",
+    "sync",
+    "google-drive",
+    "export",
+    "multi-dataset"
   ],
   "author": "Houston Zhang",
   "license": "MIT",

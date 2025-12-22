@@ -1,4 +1,6 @@
 downloads/
+data/
+tmp/
 .download-progress.json
 error.log
 .git/
@@ -6,6 +8,8 @@ error.log
 .DS_Store
 node_modules/
 *.log
+*.zip
+*.tar.gz
 .vscode/
 .idea/
 *.swp
@@ -13,3 +17,5 @@ node_modules/
 .env
 .claude/
 docs/
+test-*.js
+*.test.js

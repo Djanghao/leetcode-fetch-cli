@@ -93,6 +93,7 @@ function parseArgs(startIndex = 2, customArgs = null) {
     const args = customArgs || process.argv.slice(startIndex);
     const config = {
         problemId: null,
+        dataDir: null,
         formats: ['html', 'md', 'raw'],
         fetchTemplates: true,
         fetchSolutions: true,
@@ -113,6 +114,9 @@ Arguments:
   problemId                 Download specific problem by ID (optional, default: download all)
 
 Options:
+  --data-dir, -d <path>    Data directory (default: data/downloads)
+                           Example: -d data/leetcode-problems-251216
+
   --formats, -f <formats>   Comma-separated list of formats to save
                             Available: html, md, raw
                             Default: all formats
@@ -138,8 +142,11 @@ Examples:
   leetcode-fetch download -f md                        # Download all problems, markdown only
   leetcode-fetch download 1 -f md --no-templates       # Download #1, markdown only, no templates
   leetcode-fetch download --no-solutions --no-official # Download all problems, templates only
+  leetcode-fetch download -d data/my-dataset           # Download to custom directory
             `);
             process.exit(0);
+        } else if (arg === '--data-dir' || arg === '-d') {
+            config.dataDir = args[++i];
         } else if (arg === '--formats' || arg === '-f') {
             const formats = args[++i].split(',').map(f => f.trim().toLowerCase());
             config.formats = formats;
@@ -562,12 +569,13 @@ function getSolutionLink(url) {
     return url.replace('/description/', '/solutions/');
 }
 
-function displayDownloadStatus(problem, status, progress = '1/1') {
+function displayDownloadStatus(problem, status, progress = '1/1', outputFolder = 'data/downloads') {
     const tag = problem.tags && problem.tags.length > 0 ? problem.tags[0] : 'uncategorized';
     const tagFolder = sanitizeFolderName(tag);
     const problemName = sanitizeFolderName(problem.name).toLowerCase();
     const problemFolder = `${('0000' + problem.id).slice(-4)}_${problem.difficulty}_${problemName}`;
-    const relativePath = path.join('downloads', tagFolder, problemFolder);
+    const relativeOutputFolder = path.relative(workDir, outputFolder);
+    const relativePath = path.join(relativeOutputFolder, tagFolder, problemFolder);
 
     const descSuccess = status.description.success;
     const templatesSuccess = status.templates.count === status.templates.total;
@@ -1011,7 +1019,7 @@ async function main(startIndex = 2, customArgs = null) {
     console.log('');
 
     if (CONFIG.problemId) {
-        const outputFolder = path.join(workDir, 'downloads');
+        const outputFolder = path.join(workDir, CONFIG.dataDir || 'data/downloads');
         await fs.ensureDir(outputFolder);
 
         console.log(`\x1b[2m  Output folder:\x1b[0m ${outputFolder}\n`);
@@ -1080,7 +1088,7 @@ async function main(startIndex = 2, customArgs = null) {
 
             const status = await downloadProblem(problem, outputFolder, CONFIG);
             console.log('');
-            displayDownloadStatus(problem, status, '1/1');
+            displayDownloadStatus(problem, status, '1/1', outputFolder);
             console.log('');
         } catch (error) {
             console.log(`\n\x1b[31m✗\x1b[0m Download failed`);
@@ -1089,7 +1097,7 @@ async function main(startIndex = 2, customArgs = null) {
         return;
     }
 
-    const outputFolder = path.join(workDir, 'downloads');
+    const outputFolder = path.join(workDir, CONFIG.dataDir || 'data/downloads');
 
     await fs.ensureDir(outputFolder);
 
@@ -1143,7 +1151,8 @@ async function main(startIndex = 2, customArgs = null) {
             const tagFolder = sanitizeFolderName(tag);
             const problemName = sanitizeFolderName(problem.name).toLowerCase();
             const problemFolder = `${('0000' + problem.id).slice(-4)}_${problem.difficulty}_${problemName}`;
-            const relativePath = path.join('downloads', tagFolder, problemFolder);
+            const relativeOutputFolder = path.relative(workDir, outputFolder);
+            const relativePath = path.join(relativeOutputFolder, tagFolder, problemFolder);
             console.log(`\x1b[90m⊘\x1b[0m \x1b[90m[\x1b[0m\x1b[36m${i + 1}/${totalProblems}\x1b[0m\x1b[90m]\x1b[0m \x1b[33m[Premium]\x1b[0m ${relativePath}  \x1b[90mSkipped (requires premium account)\x1b[0m`);
             skipped++;
             continue;
@@ -1165,7 +1174,7 @@ async function main(startIndex = 2, customArgs = null) {
         try {
             const status = await downloadProblem(problem, outputFolder, CONFIG);
 
-            displayDownloadStatus(problem, status, progress);
+            displayDownloadStatus(problem, status, progress, outputFolder);
 
             const isFullyComplete = status.description.success &&
                 (!CONFIG.fetchTemplates || status.templates.count === status.templates.total) &&

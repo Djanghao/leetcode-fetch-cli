@@ -32,6 +32,9 @@ const COMMANDS = {
             if (parsedArgs.problemId) {
                 downloadArgs.push(parsedArgs.problemId.toString());
             }
+            if (parsedArgs.dataDir) {
+                downloadArgs.push('-d', parsedArgs.dataDir);
+            }
             if (parsedArgs.formats) {
                 downloadArgs.push('-f', parsedArgs.formats);
             }
@@ -62,12 +65,27 @@ const COMMANDS = {
             const exportModule = require('../src/export');
             return exportModule.main(0, args);
         }
+    },
+    sync: {
+        description: 'Sync data from Google Drive',
+        handler: (args) => {
+            const syncModule = require('../src/sync');
+            return syncModule.main(0, args);
+        }
+    },
+    pack: {
+        description: 'Pack data for Google Drive upload',
+        handler: (args) => {
+            const packModule = require('../src/pack');
+            return packModule.main(0, args);
+        }
     }
 };
 
 function parseDownloadArgs(args) {
     const result = {
         problemId: null,
+        dataDir: null,
         formats: null,
         skipTemplates: false,
         skipSolutions: false,
@@ -83,7 +101,9 @@ function parseDownloadArgs(args) {
             process.exit(0);
         }
 
-        if (arg === '--formats' || arg === '-f') {
+        if (arg === '--data-dir' || arg === '-d') {
+            result.dataDir = args[++i];
+        } else if (arg === '--formats' || arg === '-f') {
             result.formats = args[++i];
         } else if (arg === '--concurrency' || arg === '-c') {
             result.concurrency = parseInt(args[++i], 10);
@@ -114,9 +134,12 @@ function showHelp() {
   status            Check authentication status
   download [id]     Download problems (optionally specify problem ID)
   export            Export downloaded problems with filtering
+  sync              Sync data from Google Drive
+  pack              Pack data for Google Drive upload
 
 \x1b[1mDOWNLOAD OPTIONS\x1b[0m
   [id]              Download specific problem by ID (optional)
+  -d, --data-dir    Data directory (default: data/downloads)
   -f, --formats     Comma-separated formats: html,md,raw (default: all)
   --no-templates    Skip downloading code templates
   --no-solutions    Skip downloading community solutions
@@ -129,7 +152,11 @@ function showHelp() {
   leetcode-fetch download
   leetcode-fetch download 1
   leetcode-fetch download -f md
-  leetcode-fetch download --no-templates --no-solutions
+  leetcode-fetch download -d data/my-dataset
+  leetcode-fetch pack
+  leetcode-fetch pack -s data/downloads -o my-backup.zip
+  leetcode-fetch sync -u <google-drive-url>
+  leetcode-fetch export -o ./my-problems -l python3
 
 \x1b[1mMORE INFO\x1b[0m
   https://github.com/Djanghao/leetcode-fetch
@@ -145,6 +172,7 @@ function showDownloadHelp() {
 
 \x1b[1mOPTIONS\x1b[0m
   [id]              Download specific problem by ID (optional)
+  -d, --data-dir    Data directory (default: data/downloads)
   -f, --formats     Comma-separated formats: html,md,raw (default: all)
   --no-templates    Skip downloading code templates
   --no-solutions    Skip downloading community solutions
@@ -156,6 +184,7 @@ function showDownloadHelp() {
   leetcode-fetch download 1
   leetcode-fetch download -f md
   leetcode-fetch download -c 10
+  leetcode-fetch download -d data/my-dataset
   leetcode-fetch download --no-templates
   leetcode-fetch download 1 -f md --no-solutions
 `);

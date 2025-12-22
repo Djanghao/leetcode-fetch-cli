@@ -10,6 +10,9 @@ CLI tool to batch download LeetCode problems with solutions using leetcode's Gra
 - Download community solutions (top voted, filtered by language)
 - Download official solutions
 - Automatic image downloading
+- Multi-dataset management with custom directories
+- Pack and sync data via Google Drive
+- Flexible export with language and format filtering
 
 
 ## Installation
@@ -36,6 +39,44 @@ cd leetcode-fetch-cli
 npm install
 npm link
 ```
+
+## Quick Start
+
+### Option 1: Sync from Google Drive (Recommended - Fast!)
+
+Don't want to wait for downloading 3700+ problems? Use our pre-downloaded backup:
+
+```bash
+# Install gdown (required for Google Drive downloads)
+pip install gdown
+
+# Sync data to default location (data/)
+leetcode-fetch sync -u "https://drive.google.com/uc?id=1f55eigTfb2O2Vl_-3p3QgoiHN04WQd41"
+
+# Then export what you need
+leetcode-fetch export -s data/downloads -o ./my-problems -l python3
+```
+
+**Backup Info:**
+- **Size**: ~2 GB (compressed)
+- **Problems**: 3786 completed
+- **Last Updated**: 2024-12-21
+- **Includes**: All descriptions, templates, and solutions
+
+### Option 2: Download from LeetCode
+
+```bash
+# Login first
+leetcode-fetch login
+
+# Download all problems
+leetcode-fetch download
+
+# Or download to custom directory
+leetcode-fetch download -d data/my-dataset
+```
+
+---
 
 ## Usage
 
@@ -131,7 +172,43 @@ leetcode-fetch export -o ./my-problems -l python3,cpp -f md --official
 leetcode-fetch export -o ./export
 ```
 
-### 5. Logout
+### 5. Pack Data for Backup
+
+Create a zip backup of your downloaded data:
+
+```bash
+# Pack default directory (data/downloads)
+leetcode-fetch pack
+# Creates: leetcode-problems-backup-YYMMDD.zip
+
+# Pack custom directory
+leetcode-fetch pack -s data/my-dataset
+
+# Custom output filename
+leetcode-fetch pack -s data/downloads -o my-backup.zip
+```
+
+Then manually upload the zip file to Google Drive for sharing or backup.
+
+### 6. Sync from Google Drive
+
+Download and extract pre-packaged data:
+
+```bash
+# Install gdown first
+pip install gdown
+
+# Sync to default location (data/)
+leetcode-fetch sync -u "https://drive.google.com/uc?id=YOUR_FILE_ID"
+
+# Sync to custom location
+leetcode-fetch sync -d custom-folder/ -u "https://drive.google.com/uc?id=YOUR_FILE_ID"
+
+# Skip integrity verification (faster)
+leetcode-fetch sync -u "https://drive.google.com/uc?id=YOUR_FILE_ID" --skip-verify
+```
+
+### 7. Logout
 
 ```bash
 leetcode-fetch logout
@@ -166,46 +243,50 @@ Downloads only problem descriptions and code templates, ideal for practice.
 ## Output Structure
 
 ```
-downloads/
-├── .download-progress.json    # Resume progress tracking
-├── array/                     # Organized by problem tags
-│   ├── 0001_Easy_two-sum/
-│   │   ├── description/
-│   │   │   ├── problem.html
-│   │   │   ├── problem.md
-│   │   │   ├── problem.raw.txt
-│   │   │   └── images/        # Description images
-│   │   │       ├── 0.jpg
-│   │   │       └── 1.jpg
-│   │   ├── templates/         # All available languages for this problem
-│   │   │   ├── solution.py
-│   │   │   ├── solution.js
-│   │   │   ├── solution.cpp
-│   │   │   └── ...
-│   │   └── solutions/
-│   │       ├── official/
-│   │       │   ├── solution.md
-│   │       │   └── images/    # Official solution images
-│   │       │       └── 0.png
-│   │       └── community/     # Top voted solution per language
-│   │           ├── python3/
-│   │           │   ├── solution.md
-│   │           │   └── images/
-│   │           │       └── 0.jpeg
-│   │           ├── javascript/
-│   │           │   └── solution.md
-│   │           └── ...
-└── ...
-├── database/                  # Database problems
-│   ├── 1280_Easy_students-and-examinations/
-│   │   ├── templates/
-│   │   │   ├── solution.sql
-│   │   │   ├── solution.mssql.sql
-│   │   │   ├── solution.pgsql.sql
-│   │   │   ├── solution.oracle.sql
-│   │   │   └── solution.pandas.py
+data/
+├── downloads/                 # Default download directory
+│   ├── .download-progress.json    # Resume progress tracking
+│   ├── array/                 # Organized by problem tags
+│   │   ├── 0001_Easy_two-sum/
+│   │   │   ├── description/
+│   │   │   │   ├── problem.html
+│   │   │   │   ├── problem.md
+│   │   │   │   ├── problem.raw.txt
+│   │   │   │   └── images/        # Description images
+│   │   │   │       ├── 0.jpg
+│   │   │   │       └── 1.jpg
+│   │   │   ├── templates/         # All available languages for this problem
+│   │   │   │   ├── solution.py
+│   │   │   │   ├── solution.js
+│   │   │   │   ├── solution.cpp
+│   │   │   │   └── ...
+│   │   │   └── solutions/
+│   │   │       ├── official/
+│   │   │       │   ├── solution.md
+│   │   │       │   └── images/    # Official solution images
+│   │   │       │       └── 0.png
+│   │   │       └── community/     # Top voted solution per language
+│   │   │           ├── python3/
+│   │   │           │   ├── solution.md
+│   │   │           │   └── images/
+│   │   │           │       └── 0.jpeg
+│   │   │           ├── javascript/
+│   │   │           │   └── solution.md
+│   │   │           └── ...
 │   │   └── ...
-└── ...
+│   ├── database/              # Database problems
+│   │   ├── 1280_Easy_students-and-examinations/
+│   │   │   ├── templates/
+│   │   │   │   ├── solution.sql
+│   │   │   │   ├── solution.mssql.sql
+│   │   │   │   ├── solution.pgsql.sql
+│   │   │   │   ├── solution.oracle.sql
+│   │   │   │   └── solution.pandas.py
+│   │   │   └── ...
+│   │   └── ...
+│   └── ...
+└── my-dataset/                # You can have multiple datasets
+    └── ...
 ```
 
 ## Download Progress
@@ -213,11 +294,11 @@ downloads/
 The tool shows real-time progress and resumes interrupted downloads:
 
 ```
-[1/3682] downloads/array/0001_Easy_two-sum  Description: 1/1, Templates: 19/19, Official: 1/1, Community: 19/19
-[2/3682] downloads/database/1280_Easy_students-and-examinations  Description: 1/1, Templates: 5/5, Official: 1/1, Community: 5/5
+[1/3682] data/downloads/array/0001_Easy_two-sum  Description: 1/1, Templates: 19/19, Official: 1/1, Community: 19/19
+[2/3682] data/downloads/database/1280_Easy_students-and-examinations  Description: 1/1, Templates: 5/5, Official: 1/1, Community: 5/5
 ```
 
-If errors occur, they're logged to `downloads/error.log`. Progress is saved to `.download-progress.json` for resuming.
+Progress is saved to `.download-progress.json` for resuming.
 
 ## Options Reference
 
@@ -230,6 +311,8 @@ COMMANDS
   status            Check authentication status
   download [id]     Download problems (optionally specify problem ID)
   export            Export downloaded problems with filtering
+  pack              Pack data for Google Drive upload
+  sync              Sync data from Google Drive
 ```
 
 ### Download Options
@@ -237,6 +320,7 @@ COMMANDS
 ```
 DOWNLOAD OPTIONS
   [id]              Download specific problem by ID (optional)
+  -d, --data-dir    Data directory (default: data/downloads)
   -f, --formats     Comma-separated formats: html,md,raw (default: all)
   --no-templates    Skip downloading code templates
   --no-solutions    Skip downloading community solutions
@@ -249,6 +333,7 @@ DOWNLOAD OPTIONS
 
 ```
 EXPORT OPTIONS
+  -s, --source-dir <path>   Source data directory (default: data/downloads)
   -o, --output <path>       Destination folder (required)
   -l, --languages <langs>   Languages to export (comma-separated)
                             Example: python3,cpp,javascript
@@ -256,6 +341,25 @@ EXPORT OPTIONS
   -f, --format <format>     Description format: html, md, or raw
                             Default: md
   --official               Include official solutions
+  -h, --help               Show help message
+```
+
+### Pack Options
+
+```
+PACK OPTIONS
+  -s, --source-dir <path>   Source data directory (default: data/downloads)
+  -o, --output <filename>   Output filename (default: leetcode-problems-backup-YYMMDD.zip)
+  -h, --help               Show help message
+```
+
+### Sync Options
+
+```
+SYNC OPTIONS
+  -d, --data-dir <path>     Destination directory (default: data/)
+  -u, --url <url>          Google Drive URL (required)
+  --skip-verify            Skip integrity verification
   -h, --help               Show help message
 ```
 
@@ -272,6 +376,9 @@ leetcode-fetch download
 
 # Download specific problem
 leetcode-fetch download 1
+
+# Download to custom directory
+leetcode-fetch download -d data/my-dataset
 
 # Download all problems, markdown only
 leetcode-fetch download -f md
@@ -292,6 +399,9 @@ leetcode-fetch download 1 -f md --no-templates
 # Export Python problems with markdown format
 leetcode-fetch export -o ./my-problems -l python3
 
+# Export from custom source directory
+leetcode-fetch export -s data/my-dataset -o ./export -l python3
+
 # Export multiple languages with HTML
 leetcode-fetch export -o ./export -l python3,cpp,javascript -f html
 
@@ -303,6 +413,23 @@ leetcode-fetch export -o ./all-problems
 
 # Export single language for practice
 leetcode-fetch export -o ./python-only -l python3 -f md
+```
+
+### Pack & Sync Examples
+
+```bash
+# Pack default directory
+leetcode-fetch pack
+# Creates: leetcode-problems-backup-251221.zip
+
+# Pack custom directory with custom name
+leetcode-fetch pack -s data/my-dataset -o my-backup.zip
+
+# Sync from Google Drive
+leetcode-fetch sync -u "https://drive.google.com/uc?id=YOUR_FILE_ID"
+
+# Sync to custom location
+leetcode-fetch sync -d data/custom/ -u "https://drive.google.com/uc?id=YOUR_FILE_ID"
 ```
 
 ### Other Examples
@@ -318,7 +445,9 @@ leetcode-fetch logout
 ## Requirements
 
 - Node.js >= 14.0.0
-- LeetCode account
+- LeetCode account (for downloading from LeetCode)
+- Python with pip (for Google Drive sync - optional)
+  - Run `pip install gdown` to enable sync command
 
 ## Contributing
 
